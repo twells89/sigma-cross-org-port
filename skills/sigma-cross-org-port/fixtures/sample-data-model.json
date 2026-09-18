@@ -1,0 +1,26 @@
+{
+  "dataModelId": "dm-src-00000000",
+  "name": "Sample Model",
+  "documentVersion": 1,
+  "folderId": "src-folder-0000",
+  "ownerId": "src-user-0000",
+  "url": "https://app.sigmacomputing.com/src/data-model/xxxx",
+  "schemaVersion": 1,
+  "kind": "dataModel",
+  "pages": [
+    {
+      "id": "dm-pg1",
+      "name": "Model",
+      "elements": [
+        {
+          "id": "E1",
+          "kind": "warehouse-table",
+          "name": "ORDERS",
+          "connectionId": "11111111-1111-1111-1111-111111111111",
+          "path": ["DEMO_DB", "DEMO", "ORDERS"],
+          "groupingId": "base"
+        }
+      ]
+    }
+  ]
+}

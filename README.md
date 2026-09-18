@@ -22,7 +22,8 @@ skills/sigma-cross-org-port/
   SKILL.md                     # the workflow: 7 phases, audit → recover → port → verify
   refs/non-portable-surface.md # what is org-scoped, what is opaque (do not "fix"), what has no automated path
   refs/spec-asymmetries.md     # why a readback is not a create body; the error → cause catalog
-  scripts/port_workbook.py     # audit + remap connections/images/columns, emit a create body
+  scripts/port_workbook.py     # audit + remap connections/dataModels/images/columns, emit a create body
+  scripts/port_data_model.py   # port a data model a workbook depends on (source.kind: data-model)
   scripts/recover_images.py    # recover org-scoped image uploads via a PDF export
   scripts/verify_port.py       # structure diff + live compile probe + source baseline
   fixtures/                    # synthetic spec for the offline smoke test
