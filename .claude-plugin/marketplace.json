@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace-manifest.json",
+  "name": "sigma-cross-org-port",
+  "description": "Copy a Sigma workbook from one Sigma org into another when both orgs already read the same warehouse tables. Reference-remapping over a spec copied verbatim; audit-first, verify-hard-after. Not a BI-tool converter and not a data migration.",
+  "version": "1.0.0",
+  "owner": {
+    "name": "Thomas Wells"
+  },
+  "plugins": [
+    {
+      "name": "sigma-cross-org-port",
+      "source": "./",
+      "description": "Sigma org A → Sigma org B workbook copy over the REST API: remap org-scoped refs (connections, image uploads), fix the GET→POST asymmetries, create on the contents endpoints, verify structure + compilation + render.",
+      "category": "sigma",
+      "keywords": [
+        "sigma",
+        "workbook",
+        "cross-org"
+      ]
+    }
+  ]
+}

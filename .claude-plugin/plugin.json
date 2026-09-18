@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "sigma-cross-org-port",
+  "displayName": "Sigma → Sigma cross-org workbook port",
+  "version": "0.1.0",
+  "description": "Copy a Sigma workbook from one Sigma org into another when both orgs already read the same warehouse tables (same paths and column names) — moving a demo, template, or sample-data workbook out of a shared org into a personal or customer org. Reference-remapping over a spec copied verbatim, plus the handful of things that cannot cross an org boundary. NOT a BI-tool converter and NOT a data migration. Uses the current workbook contents endpoints (POST /v2/workbooks, PUT /{id}/contents, GET ?includeContents=true, dryRun).",
+  "author": {
+    "name": "Thomas Wells"
+  },
+  "license": "MIT",
+  "keywords": [
+    "sigma",
+    "workbook",
+    "cross-org",
+    "port",
+    "contents",
+    "rest-api"
+  ],
+  "skills": "./skills/"
+}

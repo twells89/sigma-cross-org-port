@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Secrets / local env — NEVER commit a Sigma token
+.env
+.sigma_env
+.token
+*.token
+sigma-env.sh
+auth.json
+
+# Port run artifacts (written under a working dir by the scripts)
+src.json
+dst.json
+dst-readback.json
+audit.json
+port.json
+*.pdf
+images.tsv
+web/
+imgs/
+*.log

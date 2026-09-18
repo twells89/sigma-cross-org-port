@@ -1,0 +1,80 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    name: scripts compile, are valid UTF-8, and pass the offline smoke test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: python syntax
+        run: |
+          python3 -m compileall -q skills/sigma-cross-org-port/scripts
+      - name: valid UTF-8 (a stray non-UTF-8 byte broke a doc edit once)
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            python3 -c "open('$f',encoding='utf-8').read()" || { echo "::error file=$f::not valid UTF-8"; fail=1; }
+          done < <(find skills -type f \( -name '*.md' -o -name '*.py' \))
+          [ "$fail" -eq 0 ] && echo "OK: all skill files are valid UTF-8"
+      - name: offline port smoke test (audit flags blockers; body is contents-keyed)
+        env:
+          LANG: en_US.UTF-8
+          LC_ALL: en_US.UTF-8
+        run: ./tools/test-port-smoke.sh
+
+  hygiene:
+    name: no secrets or internal identifiers committed
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: scrub
+        run: |
+          # A real Sigma client id/secret is 64 lowercase hex; a bearer token is a JWT.
+          # Internal refs (SIG-<n> tickets, slate PR links) must never ship in a public repo.
+          if grep -rInE '\b[0-9a-f]{64}\b|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}|SIG-[0-9]+|slate\.sigmacomputing' \
+               --include='*.md' --include='*.py' --include='*.sh' --include='*.json' \
+               skills tools .claude-plugin ; then
+            echo "::error::possible secret or internal identifier committed"
+            exit 1
+          fi
+          echo "OK: no secrets or internal identifiers found"
+
+  plugin-manifest:
+    name: plugin + marketplace manifests are valid JSON and name-consistent
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: validate manifests
+        run: |
+          python3 - <<'PY'
+          import json
+          p = json.load(open(".claude-plugin/plugin.json"))
+          m = json.load(open(".claude-plugin/marketplace.json"))
+          assert p["name"] == "sigma-cross-org-port", p["name"]
+          assert m["plugins"][0]["name"] == p["name"], m["plugins"][0]["name"]
+          assert p["skills"] == "./skills/", p["skills"]
+          # every skill dir has a SKILL.md with name+description frontmatter
+          import os, re
+          for d in os.listdir("skills"):
+              sk = f"skills/{d}/SKILL.md"
+              assert os.path.exists(sk), sk
+              head = open(sk, encoding="utf-8").read()[:600]
+              assert re.search(r"^name:\s*\S", head, re.M), f"{sk}: no name"
+              assert re.search(r"^description:", head, re.M), f"{sk}: no description"
+          print("OK: manifests valid and consistent")
+          PY
