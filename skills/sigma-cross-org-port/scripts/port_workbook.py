@@ -72,6 +72,20 @@ def remap_connections(doc, cmap, counts):
     walk(doc, visit)
 
 
+def remap_datamodels(doc, dmap, counts):
+    """Repoint every dataModelId at the target org's data model. A workbook that
+    sources a data model (source.kind: data-model) carries the SOURCE org's
+    dataModelId; the model must be ported first (port_data_model.py) and the
+    old=new id supplied here. Element ids inside the model are stable across a
+    spec port, so the workbook's per-element references keep resolving."""
+    def visit(d):
+        dmid = d.get("dataModelId")
+        if isinstance(dmid, str) and dmid in dmap:
+            d["dataModelId"] = dmap[dmid]
+            counts["dataModelId"] += 1
+    walk(doc, visit)
+
+
 def strip_base_grouping(doc, counts):
     """GET emits the implicit ungrouped root as groupingId: "base"; create
     rejects it ("Grouping not found: 'base'"). The schema is explicit: omit
@@ -221,14 +235,16 @@ def orphaned_interactivity(doc):
     }
 
 
-def audit(doc, cmap, imap):
+def audit(doc, cmap, imap, dmap):
     """Everything org-scoped that still needs an operator decision."""
-    conns, uploads, input_tables = set(), set(), []
+    conns, uploads, input_tables, dms = set(), set(), [], set()
 
     def visit(d):
         cid = d.get("connectionId")
         if isinstance(cid, str):
             conns.add(cid)
+        if isinstance(d.get("dataModelId"), str):
+            dms.add(d["dataModelId"])
         if d.get("kind") == "upload" and "key" in d:
             uploads.add(d["key"])
     walk(doc, visit)
@@ -242,8 +258,10 @@ def audit(doc, cmap, imap):
             })
 
     target_conns = set(cmap.values())
+    target_dms = set(dmap.values())
     return {
         "unmapped_connectionIds": sorted(c for c in conns if c not in target_conns),
+        "unmapped_dataModelIds": sorted(d for d in dms if d not in target_dms),
         "unmapped_image_uploads": sorted(u for u in uploads if u not in imap),
         "input_tables_needing_data": input_tables,
     }
@@ -286,6 +304,9 @@ def main():
     ap.add_argument("--name", help="workbook name (default: source name)")
     ap.add_argument("--map-connection", action="append", default=[],
                     metavar="SRC=DST", help="repeatable")
+    ap.add_argument("--map-datamodel", action="append", default=[],
+                    metavar="SRC=DST", help="repeatable; old=new dataModelId "
+                    "(port the model first with port_data_model.py)")
     ap.add_argument("--map-column", action="append", default=[],
                     metavar="TABLE_ELEMENT_ID:STALE=REAL", help="repeatable")
     ap.add_argument("--image-map", metavar="TSV",
@@ -303,6 +324,7 @@ def main():
             sys.exit("spec has no 'contents' or 'document' — is this a workbook?")
 
     cmap = parse_pairs(args.map_connection)
+    dmap = parse_pairs(args.map_datamodel)
     imap = build_image_map(args.image_map) if args.image_map else {}
 
     repairs = {}
@@ -313,18 +335,19 @@ def main():
         table, stale = left.split(":", 1)
         repairs[(table.strip(), stale.strip())] = real.strip()
 
-    counts = dict(connectionId=0, groupingId_base_stripped=0, images_inlined=0,
-                  stale_write_columns_repaired=0, layout_containers_expanded=0,
-                  layout_siblings_realigned=0)
+    counts = dict(connectionId=0, dataModelId=0, groupingId_base_stripped=0,
+                  images_inlined=0, stale_write_columns_repaired=0,
+                  layout_containers_expanded=0, layout_siblings_realigned=0)
     stale_findings = []
 
     remap_connections(doc, cmap, counts)
+    remap_datamodels(doc, dmap, counts)
     strip_base_grouping(doc, counts)
     inline_images(doc, imap, counts)
     repair_write_columns(doc, repairs, counts, stale_findings)
     normalize_layout(doc, counts)
 
-    blockers = audit(doc, cmap, imap)
+    blockers = audit(doc, cmap, imap, dmap)
     blockers["unrepaired_stale_write_columns"] = stale_findings
     warnings = orphaned_interactivity(doc)
 
@@ -333,6 +356,7 @@ def main():
                    "documentVersion": src.get("documentVersion")},
         "rewrites": counts,
         "connection_map": cmap,
+        "datamodel_map": dmap,
         "blockers": blockers,
         "warnings_inherited_from_source": warnings,
         "totals": {"elements": len(doc.get("elements", [])),
@@ -340,6 +364,7 @@ def main():
     }
 
     hard = (blockers["unmapped_connectionIds"]
+            or blockers["unmapped_dataModelIds"]
             or blockers["unmapped_image_uploads"]
             or blockers["unrepaired_stale_write_columns"])
 

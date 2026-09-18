@@ -57,7 +57,7 @@ reads already exist in B under the same path and column names.
 
 **Out of scope:** converting from Tableau/Power BI/Looker/etc. (use the matching
 `*-to-sigma` converter); landing data that B does not have; porting data models
-(`/v2/dataModels/spec` is a separate surface — port the model first, then the
+(a separate surface — port the model first with `scripts/port_data_model.py`, see **Data-model-backed workbooks** below, then the
 workbook that references it).
 
 **Hard prerequisite — verify, do not assume.** The premise is that both orgs see
@@ -145,6 +145,7 @@ python3 scripts/port_workbook.py --src-spec src.json \
 The report names every unresolved item and the exact flag that fixes it:
 
 - `unmapped_connectionIds` → `--map-connection SRC=DST`
+- `unmapped_dataModelIds` → port each model first (**Data-model-backed workbooks** below), then `--map-datamodel SRC=DST`
 - `unmapped_image_uploads` → Phase 4
 - `unrepaired_stale_write_columns` → `--map-column TBL:STALE=REAL`, with that
   table's valid column ids listed so you can choose deliberately
@@ -288,6 +289,43 @@ size.
 
 If the user would rather keep native uploads than data URIs, port with the
 images omitted and drag the recovered files onto the elements in the UI.
+
+## Data-model-backed workbooks (port the model first)
+
+If an element's `source.kind` is `data-model`, the workbook reaches the warehouse
+**through a data model**, not a `connectionId` of its own — so the audit reports
+`unmapped_dataModelIds` and no `unmapped_connectionIds`. Port the model first,
+then repoint the workbook at the new one.
+
+```bash
+# 1. pull the model spec (FLAT — schemaVersion/kind/pages at top level, no wrapper)
+curl -s -H "Authorization: Bearer $SRC_TOKEN" \
+  "$SRC_BASE/v2/dataModels/<SRC_DM_ID>/spec" > dm-src.json
+
+# 2. audit, then port (remaps connectionId, strips groupingId:base, drops the
+#    response-only envelope, overrides folderId). Its report lists warehouse_paths
+#    — verify each on the TARGET connection exactly as in Phase 2.
+python3 scripts/port_data_model.py --src-spec dm-src.json \
+  --out dm.json --report dm-port.json \
+  --folder-id <DST_FOLDER> --name "<Name>" \
+  --map-connection <SRC_CONN>=<DST_CONN>
+
+# 3. create the model (JSON; flat body)
+curl -s -X POST -H "Authorization: Bearer $DST_TOKEN" -H "Content-Type: application/json" \
+  --data-binary @dm.json "$DST_BASE/v2/dataModels/spec" | jq '{dataModelId, name}'
+```
+
+Spec **element ids are preserved** across the port, so the workbook's per-element
+references (`source.elementId`) keep resolving — you only remap the model id.
+Confirm with `GET /v2/dataModels/<NEW_DM_ID>/elements` (ids match the source),
+then compile-probe one via
+`GET /v2/dataModels/<NEW_DM_ID>/elements/<elementId>/query`.
+
+Then pass the model id to the workbook port in Phase 5:
+`--map-datamodel <SRC_DM_ID>=<NEW_DM_ID>` (repeatable). A workbook can reference
+several models; map each. `port_data_model.py` has no dryRun/verify surface (the
+data-model API exposes none) — a bad connection map surfaces at create or on the
+element query probe.
 
 ## Phase 5 — Port and create
 

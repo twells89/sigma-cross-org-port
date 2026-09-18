@@ -5,7 +5,12 @@
   "contents": {
     "schemaVersion": 1,
     "kind": "workbook",
-    "pages": [{ "id": "pg1", "name": "Overview" }],
+    "pages": [
+      {
+        "id": "pg1",
+        "name": "Overview"
+      }
+    ],
     "elements": [
       {
         "id": "tbl1",
@@ -14,21 +19,50 @@
         "source": {
           "kind": "warehouse-table",
           "connectionId": "11111111-1111-1111-1111-111111111111",
-          "path": ["DEMO_DB", "DEMO", "ORDERS"],
+          "path": [
+            "DEMO_DB",
+            "DEMO",
+            "ORDERS"
+          ],
           "groupingId": "base"
         },
         "columns": [
-          { "id": "c_id", "name": "Order Id" },
-          { "id": "c_amt", "name": "Amount" }
+          {
+            "id": "c_id",
+            "name": "Order Id"
+          },
+          {
+            "id": "c_amt",
+            "name": "Amount"
+          }
         ]
       },
       {
         "id": "img1",
         "kind": "image",
         "name": "Logo",
-        "source": { "kind": "upload", "key": "upload-abc123" }
+        "source": {
+          "kind": "upload",
+          "key": "upload-abc123"
+        }
+      },
+      {
+        "id": "dm1",
+        "kind": "table",
+        "name": "From Model",
+        "source": {
+          "kind": "data-model",
+          "dataModelId": "dm-src-00000000",
+          "elementId": "E1"
+        },
+        "columns": [
+          {
+            "id": "m_x",
+            "name": "X"
+          }
+        ]
       }
     ],
-    "layout": "<?xml version=\"1.0\"?><Page pageId=\"pg1\"><Element elementId=\"tbl1\" gridColumn=\"1 / 9\" gridRow=\"1 / 6\"/><Element elementId=\"img1\" gridColumn=\"9 / 13\" gridRow=\"1 / 6\"/></Page>"
+    "layout": "<?xml version=\"1.0\"?><Page pageId=\"pg1\"><Element elementId=\"tbl1\" gridColumn=\"1 / 9\" gridRow=\"1 / 6\"/><Element elementId=\"img1\" gridColumn=\"9 / 13\" gridRow=\"1 / 6\"/><Element elementId=\"dm1\" gridColumn=\"1 / 13\" gridRow=\"6 / 11\"/></Page>"
   }
 }
