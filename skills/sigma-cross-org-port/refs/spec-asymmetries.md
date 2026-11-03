@@ -1,6 +1,6 @@
 # GET → POST asymmetries, and the error catalog
 
-A workbook readback (`GET /v2/workbooks/{id}?includeContents=true`, or legacy
+A workbook readback (`GET /v2/workbooks/{id}?includeContents=true`, or the deprecated
 `GET /v2/workbooks/{id}/spec`) is **not** a valid create body. Three classes of
 difference bite, in this order: envelope, emitted-but-rejected fields, and
 normalizations the API applies on write. Then there is a fourth class that has
@@ -33,7 +33,7 @@ tags, contents
   dryRun as exit 1 with the whole payload embedded in the error `message` string.)
 
 The legacy `/v2/workbooks/spec*` family (doc under `document`, YAML accepted) is
-still supported; these scripts read either envelope but write the `contents` one.
+deprecated; these scripts still read either envelope but write only the `contents` one.
 
 ## 2. Emitted by GET, rejected by POST
 

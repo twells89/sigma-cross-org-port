@@ -47,7 +47,7 @@ old `application/yaml` content type is not accepted here.
 | Update | `PUT /v2/workbooks/{id}/contents` with `{contents}` |
 
 The legacy `/v2/workbooks/spec*` family (doc under `document`, YAML accepted) is
-still supported; the port scripts still *read* a legacy `document` envelope, but
+deprecated; the port scripts still *read* a legacy `document` envelope, but
 everything they *write* targets the endpoints above.
 
 ## Scope
