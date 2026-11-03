@@ -201,7 +201,8 @@ def normalize_layout(doc, counts):
 def orphaned_interactivity(doc):
     """Interactivity the spec DECLARES but never wires up.
 
-    `GET /v2/workbooks/{id}/spec` does not always return a workbook's full
+    `GET /v2/workbooks/{id}?includeContents=true` (like the deprecated `/spec` read
+    before it, whose contents are byte-identical) does not always return a workbook's full
     action surface — buttons can come back as presentation-only, with their
     conditional logic omitted entirely (no stub, no marker). A port then
     faithfully reproduces a workbook that looks right and does nothing.
@@ -295,7 +296,7 @@ def main():
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--src-spec", required=True,
                     help="workbook from GET /v2/workbooks/{id}?includeContents=true "
-                         "(or legacy /spec; YAML or JSON)")
+                         "(or a legacy /spec body; YAML or JSON)")
     ap.add_argument("--out", required=True, help="create body to write (JSON)")
     ap.add_argument("--dry-run", action="store_true",
                     help="set dryRun:true in the body (validate without persisting)")

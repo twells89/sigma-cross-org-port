@@ -41,8 +41,8 @@ Uses the current workbook **contents** endpoints (JSON only):
 | Create | `POST /v2/workbooks` with `{name, folderId, contents}` |
 | Update | `PUT /v2/workbooks/{id}/contents` with `{contents}` |
 
-The legacy `/v2/workbooks/spec*` family still works; the scripts read either
-envelope but write the `contents` one.
+The legacy `/v2/workbooks/spec*` family is deprecated (OpenAPI 2.0.0+20261030); the
+scripts still read either envelope but write only the `contents` one.
 
 ## Prerequisites
 
